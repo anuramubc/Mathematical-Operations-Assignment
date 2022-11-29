@@ -1,0 +1,46 @@
+%assignment5
+%part1
+%import data file
+data = xlsread('datafile1.xlsx');
+xdata = data(:,1);
+ydata = data(:,2);
+
+%forward difference to calculate dD/dt
+for i = 1:(size(xdata)-1)
+dD_dt(i) = (ydata(i+1) - ydata(i))/(xdata(i+1)-xdata(i));
+if i+1 > size(xdata)
+break;
+end
+end
+plot(xdata,dD_dt,'b')
+hold on
+
+%analytical differentiation
+%part2
+%dD/dt = a*b*t^(b-1)
+a = 10;
+b = 0.5;
+%dD/dt using direct differentiation
+for i = 1:size(xdata)
+dD_dt2(i) = a*b*(xdata(i)^(b-1));
+end
+plot (xdata,dD_dt2,'g-')
+hold on
+%Central difference method using step size = 10^-6
+%central difference to calculate dD/dt
+h1 = 10^-6;
+for i = 1:size(xdata)
+dD_dt3(i) = (y_eval(xdata(i)+h1) - y_eval(xdata(i)-h1))/(2*h1);
+end
+plot(xdata,dD_dt3,'r--')
+xlabel('t');
+ylabel('dD/dt');
+legend({'direct forward diff','direct diff of func','central diff h = 10^-
+6'},'location','northeast');
+hold off
+
+function y_new = y_eval(x)
+a = 10;
+b = 0.5;
+y_new = a*x^b;
+end

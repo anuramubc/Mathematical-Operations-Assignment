@@ -1,0 +1,66 @@
+%inititalizing J, f, x, xold matrix to zero
+J=[0,0;0,0];
+f = [0;0];
+x = [0;0];
+xold = [0;0];
+%initial guess of x1 and x2
+x10 = 0.1;
+x20 = 0.1;
+maxIter = 100; %iteration required for convergence
+x = [x10;x20]; %assigning initial guess to x matrix
+xold = x;
+%iteration for calculating x1 and x2 using Newton's method
+for i = 1 : maxIter
+J = jacobi(x(1,1),x(2,1)); %function call to find Jacobin matrix
+f1 = fval1(x(1,1),x(2,1)); %function call to evaluate f1 for equation 1
+f2 = fval2(x(1,1),x(2,1)); %function call to evaluate f2 for equation 2
+f = [f1;f2]; %creating f matrix
+x = nr(x,J,f); %function call to evaluate the equlibrium
+conversion
+err = abs (x-xold); %Calculate the difference between the x(i)
+and x(i+1)
+xold = x; %to store the x(i+1) value for the next
+iteration
+%tolerance limit, if the differnce between x(i) and x(i+1) < machine
+epsilon, the loop will end
+if( err < eps)
+break;
+end
+end
+disp(x); %print equlibrium conversion x1 and x2
+%function to perform Newton's method
+function X = nr(x,J,f)
+X= x - inv(J)*f; % x(n+1) = x(n) + (J^-1)*f, Newton's method
+end
+%function to evaluate f1 at x1 and x2
+function f1 = fval1(x1,x2)
+%constants
+A = 40;
+B = 15;
+C = 0;
+D = 10;
+%f1 = C1-5*10^-4*A1^2*B1
+f1 = (C + x1*B + x2*D)-(5*10^-4*((A-2*x1*B-x2*D)^2)*(B-x1*B));
+end
+%function to evaluate f2 at x1 and x2
+function f2 = fval2(x1,x2)
+%constants
+A = 40;
+B = 15;
+C = 0;
+D = 10;
+f2 = (C + x1*B + x2*D)-(4*10^-2*(A-2*x1*B-x2*D)*(D-x2*D));
+end
+%function to evaluate Jacobian matrix
+function J = jacobi(x1,x2)
+%step size , h is chosen as 10^-6
+h = [10^-6;10^-6];
+%central difference formula to calculate the derivatives
+%df/dx = f(x+h)-f(x-h)/2*h
+df1x1 = (fval1(x1+h(1),x2)-fval1(x1-h(1),x2))/(2*h(1));
+df1x2 = (fval1(x1,x2+h(1))-fval1(x1,x2-h(1)))/(2*h(1));
+df2x1 = (fval2(x1+h(2),x2)-fval2(x1-h(2),x2))/(2*h(2));
+df2x2 = (fval2(x1,x2+h(2))-fval2(x1,x2-h(2)))/(2*h(2));
+%Jacobian matrix
+J = [df1x1,df1x2;df2x1,df2x2];
+end

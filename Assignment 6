@@ -1,0 +1,48 @@
+%Assignment6
+%limits
+a = 0; %lower limit
+b = linspace(0,2,10); %upper limit from 0<eta<2
+c = length(b);
+I_old = 0;
+%for loop to evaluate the integral bewtween different limits
+for j = 1: c
+%n is the number of nodes
+for n = 1:20
+%function call statement to leg(n), which possesses the values of
+%weights and abscissa for legendre function depending on the number
+%of nodes
+%yold = abscissa, w = weights
+[yold, w] = Leg(n);
+%to check if the limits (a,b)are between 1 and -1, since the
+%function is only valid between [-1,1]
+if a ~= -1 && b(j) ~= 1
+%to evaluate ynew, which is between [-1,1]
+ynew = ((b(j)-a)/2)*yold + (b(j)+a)/2;
+end
+% gauss quadrature integration
+Iini = 0;
+for i = 1:length(yold)
+%integral is evaluated using the weights and the function value
+%at ynew
+I = ((b(j)-a)/2)*(w(i)*exp(-ynew(i)^3));
+I = Iini + I;
+Iini = I;
+end
+%stoppage condition
+if (abs(I-I_old) < 10^-5)
+break;
+end
+I_old = I;
+end
+%final answer
+ans(j) = 1 - I;
+end
+plot(b,ans)
+xlabel('eta');
+ylabel('theta');
+%function that contains the legendre polynomial weights and abscissa
+function [ydata, wdata] = Leg(n)
+Legendre = xlsread('Ass6Data.xlsx',n);
+ydata = Legendre(:,1);
+wdata = Legendre(:,2);
+end

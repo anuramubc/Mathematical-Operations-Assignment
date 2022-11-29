@@ -1,0 +1,196 @@
+MATLAB CODE:
+PART 1 : NON-LINEAR REGRESSION
+%Non-linear regression D = at^b
+%import data
+data = xlsread ('datafile.xlsx');
+t = data(:,1);
+D = data(:,2);
+%initial guess
+a = 5;
+b = 1;
+lambda = 10^-2;
+chisq = [0;0];
+%evaluating chi square using the initial parameters
+chisq = chi_square(D,t,a,b,lambda);
+deltaa = [0;0];
+a_new = a;
+b_new = b;
+%evaluating delta_a using the initial parameters
+deltaa = delta_a(D,t,a,b,lambda);
+D_new = zeros(size(D));
+for i = 1:100
+if chisq(2) < chisq(1) %if condition
+lambda = lambda / 10;
+%evaluate delta at new lambda values
+deltaa = delta_a(D,t,a_new,b_new,lambda);
+a_new = a_new + deltaa(1);
+b_new = b_new + deltaa(2);
+%evaluating chi_square at new parameters a,b and lambda
+chisq = chi_square(D,t,a_new,b_new,lambda)
+else
+lambda = lambda * 10;
+%evaluate delta at new lambda values
+deltaa = delta_a(D,t,a_new,b_new,lambda);
+a_new = a_new + deltaa(1);
+b_new = b_new + deltaa(2);
+%evaluating chi_square at new parameters a,b and lambda
+chisq = chi_square(D,t,a_new,b_new,lambda)
+end
+err = abs(chisq(1)-chisq(2));
+%stoppage criteria
+if(err<eps)
+break;
+end
+end
+%evaluating D using the estimated a and b values
+for i = 1:100
+D_new(i) = a_new*t(i)^b_new;
+end
+%plotting data set and model data
+plot(t,D,'g')
+xlabel('t');
+ylabel('D');
+hold on
+plot(t,D_new,'r-')
+legend({'data file','modelled data'},'location','southeast')
+function alpha_prime = alpha_func(D,t,a,b,lambda) %function alpha_func to
+evaluate alpha prime
+J = [0 0];
+alpha = zeros(2);
+Hessian = zeros(2);
+alpha_prime = zeros(2);
+for i = 1:100
+%derivatives to form the jacobi dD/da and dD/db
+dD_da (i) = t(i)^b;
+dD_db (i) = a*t(i)^b*log(t(i));
+J = [dD_da(i) dD_db(i)];
+%Hessian matrix is also equal to J'*J
+Hessian = J' * J;
+alpha = Hessian;
+%setting the diagnal elements to (1+lambda)*diagonal element
+alpha(1,1) = Hessian(1,1)*(1+lambda);
+alpha(2,2) = Hessian(2,2)*(1+lambda);
+alpha_prime = alpha_prime + alpha;
+end
+end
+function beta = betafunc(D,t,a,b) %function betafunc to evaluate beta
+beta = [0;0];
+for i = 1:size(t)
+%Evaluating D_new at a and b parameters
+D_new(i) = a*t(i)^b;
+%derivatives of D with respect to a and b
+dD_da = t(i)^b;
+dD_db = a*t(i)^b *log(t(i));
+%evaluating beta
+beta(1) = beta(1) + (D(i) - D_new(i))* dD_da;
+beta(2) = beta(2) + (D(i) - D_new(i))* dD_db;
+end
+end
+
+function chisq = chi_square(D,t,a,b,lambda) %function to evaluate chisquare
+at new and old parameters
+D_old = zeros(size(D));
+chisq = [0;0];
+chisq_old = 0;
+chisq_new = 0;
+deltaa = [0;0];
+for i = 1:100
+%calculating D at the old values of a and b
+D_old(i) = a * t(i)^b;
+%evaluating chi square at the old values of a and b
+chisq_old = chisq_old + ((D(i) - D_old(i))^2);
+%function call to estimate delta_a
+deltaa = delta_a(D,t,a,b,lambda);
+%Obtaining new parameter values by adding dek_a to the old values
+a_new = a + deltaa(1);
+b_new = b + deltaa(2);
+%evaluating D at the new values of a and b
+D_new(i) = a_new *t(i)^(b_new);
+%evaluating chi square at the new values of a and b
+chisq_new = chisq_new + ((D(i) - D_new(i))^2);
+end
+chisq = [chisq_old;chisq_new]; %return value
+end
+function del_a = delta_a(D,t,a,b,lambda) % function to estimate delta a
+alpha_prime = alpha_func(D,t,a,b,lambda); %function call to evaluate alpha
+prime
+beta = betafunc(D,t,a,b); %function call to evaluate beta
+del_a = inv(alpha_prime)*beta; %estimate del a = inv(alpha prime)*beta
+end
+
+PART 2: LINEAR REGRESSION
+DIRECT METHOD
+%linear regression using direct method
+%initialization
+s = 0;
+sx = 0;
+sy = 0;
+sxx = 0;
+sxy = 0;
+%importing data set
+data = xlsread('datafile.xlsx');
+t = data(:,1);
+D = data(:,2);
+% model function logD = log(a) + b log(t)
+x = size(t);
+x = log10(t);
+y = size(D);
+y = log10(D);
+for i = 1:100
+s = s+1;
+sx = sx + x(i);
+sy = sy + y(i);
+sxx = sxx + x(i)^2;
+sxy = sxy + x(i)*y(i);
+end
+del = s*sxx-sx*sx;
+log_a = (sy*sxx - sx*sxy)/del;
+a = 10^(log_a)
+b = (s*sxy - sx*sy)/del;
+%parameters of the linear model
+%for loop for evaluating D_new with the estimated parameters
+D_new = zeros(size(D));
+for i = 1:100
+D_new(i) = a*t(i)^b;
+end
+%plotting data set and the model data
+plot(t,D,'g')
+xlabel('t');
+ylabel('D');
+hold on
+plot(t,D_new,'r-')
+legend({'data file','modelled data'},'location','southeast')
+
+GENERALIZED LINEAR REGRESSION
+%linear regression model using generalized linear regression algorithm
+%importing data
+data = xlsread('datafile.xlsx');
+t = data(:,1);
+D = data(:,2);
+% model function logD = log(a) + b log(t)
+A = size(t);
+A = log10(t);
+[m,n] = size(t);
+% insert the first column in A as 1
+A = [ones(m,1) A];
+b = size(D);
+b = log10(D);
+Const = [0;0];
+%Generalized linear regression
+%(A'*A)*a = A'*b
+Const = inv(A'*A)*(A'*b);
+log_a = Const(1);
+b = Const(2);
+%Parameters of the linear model
+a = 10^log_a;
+%For loop to evaluate D_new at the evaluated parameters a and b
+for i = 1:100;
+D_new(i) = a * t(i)^b;
+end
+%plotting both data set and the model values for comparison
+plot(t,D,'g')
+xlabel('t');
+ylabel('D');
+hold on
+plot(t,D_new,'r-')
+legend({'data file','modelled data'},'location','southeast')
